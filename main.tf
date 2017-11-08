@@ -84,3 +84,14 @@ resource "aws_security_group" "default" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+
+resource "aws_s3_bucket" "gameday-b" {
+  bucket = "ga-gameday-b"
+  acl    = "public-read"
+
+  tags {
+    Name        = "gameday"
+  }
+}
+
