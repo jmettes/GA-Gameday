@@ -1,3 +1,5 @@
+#!/bin/bash -v
+
 # attacks:
 # - ELB min = 0
 # - delete img.png
@@ -6,7 +8,7 @@
 sudo apt-get update -y
 sudo apt-get install python-pip -y
 sudo pip install flask
-sudo apt-get install nginx
+sudo apt-get install nginx -y
 
 s=$(cat <<- END
 from flask import Flask
@@ -18,19 +20,19 @@ app = Flask(__name__)
 
 t = Template("""
 <!-- <meta http-equiv="refresh" content="5"> -->
-<h1>GA Gameday</h1>
-<table>
+<center><h1>GA Gameday</h1></center>
+<table style="width: 100%" cellspacing="10">
     <tr>
-        <th>Team A</th>
-        <th>Team B</th>
+        <th style="width: 50%; background: black; color: white;">Team A</th>
+        <th style="width: 50%; background: black; color: white;">Team B</th>
     </tr>
     <tr>
-        <td><strong>Score:</strong> $a_count</td>
-        <td><strong>Score:</strong> $b_count</td>
+        <td><h2>Score: \$a_count</h2></td>
+        <td><h2>Score: \$b_count</h2></td>
     </tr>
     <tr>
-        <td valign="top"><strong>Codes:</strong><table><tr><td>$a_code</td></tr></table></td>
-        <td valign="top"><strong>Codes:</strong><table><tr><td>$b_code</td></tr></table></td>
+        <td valign="top"><strong>Codes:</strong><table><tr><td>\$a_code</td></tr></table></td>
+        <td valign="top"><strong>Codes:</strong><table><tr><td>\$b_code</td></tr></table></td>
     </tr>
 </table>
 """)
@@ -84,8 +86,6 @@ END
 )
 
 echo "$s" > server.py
-export FLASK_APP=server.py
-flask run
 
 f="server {
     listen       80;
@@ -97,7 +97,8 @@ f="server {
 }"
 
 sudo sh -c 'echo $f > /etc/nginx/conf.d/virtual.conf'
+sudo rm /etc/nginx/sites-enabled/default
 sudo service nginx restart
 
-
-
+export FLASK_APP=server.py
+flask run
