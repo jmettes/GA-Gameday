@@ -15,6 +15,7 @@ from flask import Flask
 import urllib2
 from string import Template
 from datetime import datetime
+from datetime import timedelta
 
 app = Flask(__name__)
 
@@ -50,7 +51,7 @@ data = {
 }
 
 def check_link(link, team):
-    time = datetime.now().strftime("%I:%M:%S%p")
+    time = (datetime.now() + timedelta(hours=11)).strftime("%I:%M:%S%p")
 
     try:
         code = urllib2.urlopen(link, timeout=1).getcode()
