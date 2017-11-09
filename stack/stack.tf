@@ -38,6 +38,11 @@ resource "aws_autoscaling_group" "web-asg" {
   }
 }
 
+resource "template_file" "user_data" {
+  template = "${file("userdata.sh")}"
+  vars { team = "${var.team}" }
+}
+
 resource "aws_launch_configuration" "web-lc" {
   name          = "gameday-lc-${var.team}"
   image_id      = "${lookup(var.aws_amis, var.aws_region)}"
@@ -45,7 +50,7 @@ resource "aws_launch_configuration" "web-lc" {
 
   # Security group
   security_groups = ["${aws_security_group.default.id}"]
-  user_data       = "${file("userdata.sh")}"
+  user_data       = "${template_file.user_data.rendered}"
   key_name        = "${var.key_name}"
 }
 

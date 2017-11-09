@@ -10,7 +10,7 @@ sudo apt-get install python-pip -y
 sudo pip install flask
 sudo apt-get install nginx -y
 
-s=$(cat <<- END
+export s=$(cat <<- END
 from flask import Flask
 import urllib2
 from string import Template
@@ -19,7 +19,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 t = Template("""
-<!-- <meta http-equiv="refresh" content="5"> -->
+<meta http-equiv="refresh" content="5">
 <center><h1>GA Gameday</h1></center>
 <table style="width: 100%" cellspacing="10">
     <tr>
@@ -53,26 +53,31 @@ def check_link(link, team):
     time = datetime.now().strftime("%I:%M:%S%p")
 
     try:
-        code = urllib2.urlopen(link).getcode()
-        if code == 200:
-            data[team]['count'] = data[team]['count'] + 1
-        else:
-            data[team]['count'] = data[team]['count'] - 1
-
-        data[team]['codes'].insert(0, time + ' - ' + str(code))
+        code = urllib2.urlopen(link, timeout=1).getcode()
+        data[team]['codes'].insert(0, time + ' - ' + str(code)+ ' - ' + link.split('/')[-1])
         count = data[team]['count']
 
     except Exception as e:
-        data[team]['count'] = data[team]['count'] - 1
-        data[team]['codes'].insert(0, time + ' - ' + str(e))
-        count = data[team]['count']
+        data[team]['codes'].insert(0, time + ' - ' + str(e) + ' - ' + link.split('/')[-1])
         code = e
         pass
+
+    return code == 200
 
 @app.route('/')
 def score():
 
-    check_link("http://google.com/asdadasd", 'team_a')
+    if check_link("http://gameday-elb-team-a-790475977.ap-southeast-2.elb.amazonaws.com/index.html", 'team_a'):
+        data['team_a']['count'] = data['team_a']['count'] + 1
+        if not check_link("https://s3-ap-southeast-2.amazonaws.com/ga-gameday-team-a/hello.png", 'team_a'):
+            data['team_a']['count'] = data['team_a']['count'] - 2
+    else:
+        data['team_a']['count'] = data['team_a']['count'] + 1
+
+    if check_link("http://gameday-elb-team-b-1086806268.ap-southeast-2.elb.amazonaws.com/index.html", 'team_b'):
+        data['team_b']['count'] = data['team_b']['count'] + 1
+        if not check_link("https://s3-ap-southeast-2.amazonaws.com/ga-gameday-team-b/hello.png", 'team_b'):
+            data['team_b']['count'] = data['team_b']['count'] - 2
 
     return t.substitute(a_count=data['team_a']['count'],
                         a_code="</td></tr><tr><td>".join(data['team_a']['codes']),
@@ -85,9 +90,9 @@ if __name__ == '__main__':
 END
 )
 
-echo "$s" > server.py
+echo "$s" > /home/ubuntu/server.py
 
-f="server {
+export f="server {
     listen       80;
     server_name  13.210.36.5;
 
@@ -96,9 +101,9 @@ f="server {
     }
 }"
 
-sudo sh -c 'echo $f > /etc/nginx/conf.d/virtual.conf'
+echo "$f" > /etc/nginx/conf.d/virtual.conf
 sudo rm /etc/nginx/sites-enabled/default
 sudo service nginx restart
 
-export FLASK_APP=server.py
+export FLASK_APP=/home/ubuntu/server.py
 flask run
