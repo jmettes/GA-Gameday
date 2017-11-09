@@ -67,17 +67,19 @@ def check_link(link, team):
 @app.route('/')
 def score():
 
-    if check_link("http://gameday-elb-team-a-790475977.ap-southeast-2.elb.amazonaws.com/index.html", 'team_a'):
+    if check_link("http://gameday-elb-team-a-790475977.ap-southeast-2.elb.amazonaws.com/hello.html", 'team_a'):
         data['team_a']['count'] = data['team_a']['count'] + 1
         if not check_link("https://s3-ap-southeast-2.amazonaws.com/ga-gameday-team-a/hello.png", 'team_a'):
             data['team_a']['count'] = data['team_a']['count'] - 2
     else:
-        data['team_a']['count'] = data['team_a']['count'] + 1
+        data['team_a']['count'] = data['team_a']['count'] - 1
 
-    if check_link("http://gameday-elb-team-b-1086806268.ap-southeast-2.elb.amazonaws.com/index.html", 'team_b'):
+    if check_link("http://gameday-elb-team-b-1086806268.ap-southeast-2.elb.amazonaws.com/hello.html", 'team_b'):
         data['team_b']['count'] = data['team_b']['count'] + 1
         if not check_link("https://s3-ap-southeast-2.amazonaws.com/ga-gameday-team-b/hello.png", 'team_b'):
             data['team_b']['count'] = data['team_b']['count'] - 2
+    else:
+        data['team_b']['count'] = data['team_b']['count'] - 1
 
     return t.substitute(a_count=data['team_a']['count'],
                         a_code="</td></tr><tr><td>".join(data['team_a']['codes']),
